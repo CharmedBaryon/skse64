@@ -174,21 +174,23 @@ const void * GetResourceLibraryProcAddress(const HMODULE module, const char * ex
 
 	const void * result = nullptr;
 
-	for(UInt32 i = 0; i < exportTable->NumberOfFunctions; i++)
+	for(UInt32 i = 0; i < exportTable->NumberOfNames; i++)
 	{
-		UInt32 nameOrdinal = exportNameOrdinals[i];
-		if(nameOrdinal < exportTable->NumberOfNames)
+		UInt32 nameRVA = exportNames[i];
+		auto * name = (const char *)(base + nameRVA);
+		if(!strcmp(exportName, name))
 		{
-			UInt32 nameRVA = exportNames[nameOrdinal];
-			auto * name = (const char *)(base + nameRVA);
+			auto exportAddrIdx = exportNameOrdinals[i];
 
-			if(!strcmp(exportName, name))
+			if(exportAddrIdx >= exportTable->NumberOfFunctions)
 			{
-				UInt32 addrRVA = exportAddresses[i];
-				result = (const void *)(base + addrRVA);
-
 				break;
 			}
+
+			UInt32 addrRVA = exportAddresses[exportAddrIdx];
+			result = (const void *)(base + addrRVA);
+
+			break;
 		}
 	}
 
